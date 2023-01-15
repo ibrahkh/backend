@@ -44,6 +44,12 @@ def update_event(event_date: date,event: schemas.Events, db: Session = Depends(g
     return db_event
 
 
+@router.get("/event_id" ,status_code=status.HTTP_200_OK)
+def update_event(event_date: date, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_active_user)):
+    db_event = db.query(models.Events).filter(and_(models.Events.owner_id==current_user.id, models.Events.date==event_date )).first()
+    return db_event.id
+
+
 @router.delete("/{event_id}",status_code=status.HTTP_202_ACCEPTED)
 def delete_event(event_date: date, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_active_user)):
     db_event = db.query(models.Events).filter(and_(models.Events.owner_id==current_user.id, models.Events.date==event_date )).first()

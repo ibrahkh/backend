@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from datetime import date
 
 
-
 class Clothes(BaseModel):
+    id: Optional[int] = None
     name: Optional[str] = None
     image: Optional[str] = None
     weather: Optional[str] = None
@@ -30,7 +30,7 @@ class Events_create(BaseModel):
         orm_mode = True
 
 class User(BaseModel):
-    id: int
+    id: int | None = None
     username:str
     email:str
     hashed_password:str
@@ -42,6 +42,21 @@ class User(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class User_id(BaseModel):
+    id: int | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class Event_id(BaseModel):
+    id: int | None = None
+
+    class Config:
+        orm_mode = True
+
 
 class Event_User(BaseModel):
     id: int

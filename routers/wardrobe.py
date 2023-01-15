@@ -6,11 +6,14 @@ import schemas, models, oauth2
 from sqlalchemy.orm import Session
 from database import get_db
 import os 
-from .classification import recognize, suggest_outfit
+from .classification import recognize, full_outfit_suggest, suggest
 from sqlalchemy import func,and_
 
 
 router = APIRouter(prefix="/clothes", tags=["clothes"])
+
+
+
 
 
 
@@ -83,6 +86,8 @@ def read_clothes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),
     return clothes
 
 
+
+
 @router.get("/category", response_model=List[schemas.Clothes] , status_code=status.HTTP_200_OK)
 def read_clothes_category(category_id : int,skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: schemas.User = Depends(oauth2.get_current_active_user)):
     clothes = db.query(models.Clothes).filter(and_(models.Clothes.owner_id==current_user.id, models.Clothes.category_id==category_id)).offset(skip).limit(limit).all()
@@ -109,16 +114,18 @@ def deleted_clothes(clothes_id: int, db: Session = Depends(get_db),current_user:
 
 
 
-@router.get("/outfit/", response_model=List[schemas.Clothes], status_code=status.HTTP_202_ACCEPTED)
-def outfit_suggested(clothes_id: int, db: Session = Depends(get_db),current_user: schemas.User = Depends(oauth2.get_current_active_user)):
-    img=db.query(models.Clothes.image).filter(and_(models.Clothes.owner_id==current_user.id , models.Clothes.id == clothes_id)).first()[0]
-    weather= db.query(models.Clothes.weather).filter(and_(models.Clothes.owner_id==current_user.id , models.Clothes.id == clothes_id)).first()[0]
-    option=suggest_outfit(img)
-    l=[]
-    for to_wear in option:
-        result = db.query(models.Clothes).filter(and_(models.Clothes.name==to_wear,models.Clothes.owner_id==current_user.id )).order_by(func.random()).first()
-        if result==None:
-            result=models.Clothes(name="you don't have a "+to_wear+ " for a "+weather +" weather" , owner_id=current_user.id )
-        l.append(result)
 
-    return l
+
+
+@router.get("/outfit/", response_model=List[schemas.Clothes], status_code=status.HTTP_202_ACCEPTED)
+def outfit_suggested( image_path: str, db: Session = Depends(get_db),current_user: schemas.User = Depends(oauth2.get_current_active_user)):
+    return suggest(user_id=current_user.id,image_path=image_path, db=db)
+
+
+
+
+
+@router.get("/suggest/", response_model=List[schemas.Clothes], status_code=status.HTTP_202_ACCEPTED)
+def full_outfit_suggestion(db: Session = Depends(get_db),current_user: schemas.User = Depends(oauth2.get_current_active_user)):
+    return full_outfit_suggest(user_id=current_user.id , user_sexe= current_user.sexe, db=db)
+

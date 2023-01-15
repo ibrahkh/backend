@@ -7,11 +7,9 @@ from datetime import date
 import secrets
 from sqlalchemy import and_
 
-
 def get_age(birth_date):
     today = date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-
 
 
 
@@ -41,6 +39,12 @@ def create(request : schemas.User , db: Session = Depends(get_db)):
     return new_user
 
 
+@router.get('/user_id', status_code=status.HTTP_200_OK)
+def get_user_id(db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_active_user)):
+    return current_user.id
+
+
+
 @router.get('/{id}',response_model=schemas.ShowUser, status_code=status.HTTP_200_OK)
 def get_user(db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_active_user)):
     user = show_user(current_user.id, db)
@@ -49,9 +53,10 @@ def get_user(db: Session = Depends(get_db), current_user: schemas.User = Depends
         'username': user.username,
         'email': user.email,
         'sexe': user.sexe,
-        'age': user_age
-    }
+        'age': user_age,
+        'image': user.image
 
+    }
 
 
 
@@ -85,6 +90,7 @@ async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_d
 
     db_user.image=generated_name
 
+    db.add(db_user)
     db.commit()
     db.refresh(db_user)
     
